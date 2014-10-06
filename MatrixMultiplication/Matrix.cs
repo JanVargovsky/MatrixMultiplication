@@ -98,5 +98,16 @@ namespace MatrixMultiplication
 
             return result;
         }
+
+        public static Matrix StrassenMultiply(Matrix m1, Matrix m2)
+        {
+            var sizes = new int[] { m1.Rows, m1.Columns, m2.Rows, m2.Columns };
+            if (sizes.Distinct().Count() != 1 || (m1.Rows & (m1.Rows - 1)) != 0)
+                throw new ArgumentException("Not identical or square matrices.");
+
+            Matrix result = new Matrix(m1.Rows);
+
+            return result;
+        }
     }
 }
