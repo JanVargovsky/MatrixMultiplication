@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MatrixMultiplication
 {
@@ -60,37 +57,83 @@ namespace MatrixMultiplication
         }
         #endregion
 
+        #region Overrided methods
         public override bool Equals(object obj)
         {
-            Matrix m1 = this, m2 = (Matrix)obj;
+            Matrix a = this, b = (Matrix)obj;
 
-            if (m2 == null)
+            if (b == null)
                 return false;
-            if (m1.Rows != m2.Rows || m1.Columns != m2.Columns)
+            if (a.Rows != b.Rows || a.Columns != b.Columns)
                 return false;
 
-            for (int row = 0; row < m1.Rows; row++)
-                for (int col = 0; col < m1.Columns; col++)
-                    if (m1[row, col] != m2[row, col]) return false;
+            for (int row = 0; row < a.Rows; row++)
+                for (int col = 0; col < a.Columns; col++)
+                    if (a[row, col] != b[row, col]) return false;
 
             return true;
         }
 
-        public static Matrix NormalMultiply(Matrix m1, Matrix m2)
+        public override int GetHashCode()
         {
-            if (m1.Columns != m2.Rows)
-                throw new ArgumentException("Number of rows of the m1 doesnt equal to number of columns of the m2.");
+            return base.GetHashCode();
+        }
+        #endregion
 
-            Matrix result = new Matrix(m1.Rows, m2.Columns);
+        #region Operators
+        public static Matrix operator +(Matrix a, Matrix b)
+        {
+            return Matrix.Add(a, b);
+        }
 
-            for (int row = 0; row < m1.Rows; row++)
+        public static Matrix operator -(Matrix a, Matrix b)
+        {
+            return Matrix.Subtract(a, b);
+        }
+        #endregion
+
+        public static Matrix Add(Matrix a, Matrix b)
+        {
+            if (a.Rows != b.Rows || a.Columns != b.Columns)
+                throw new ArgumentException("Not identical matrices.");
+
+            Matrix result = new Matrix(a.Rows, a.Columns);
+
+            for (int row = 0; row < a.Rows; row++)
+                for (int col = 0; col < a.Columns; col++)
+                    result[row, col] = a[row, col] + b[row, col];
+
+            return result;
+        }
+
+        public static Matrix Subtract(Matrix a, Matrix b)
+        {
+            if (a.Rows != b.Rows || a.Columns != b.Columns)
+                throw new ArgumentException("Not identical matrices.");
+
+            Matrix result = new Matrix(a.Rows, a.Columns);
+
+            for (int row = 0; row < a.Rows; row++)
+                for (int col = 0; col < a.Columns; col++)
+                    result[row, col] = a[row, col] - b[row, col];
+
+            return result;
+        }
+
+        public static Matrix NormalMultiply(Matrix a, Matrix b)
+        {
+            if (a.Columns != b.Rows)
+                throw new ArgumentException("Number of rows of the matrix a doesnt equal to number of columns of the matrix b.");
+
+            Matrix result = new Matrix(a.Rows, b.Columns);
+
+            for (int row = 0; row < a.Rows; row++)
             {
-                for (int col = 0; col < m2.Columns; col++)
+                for (int col = 0; col < b.Columns; col++)
                 {
                     double tmp = 0;
-
-                    for (int i = 0; i < m1.Columns; i++) // or i < m2.Rows, it's equal
-                        tmp += m1[row, i] * m2[i, col];
+                    for (int i = 0; i < a.Columns; i++) // or i < b.Rows, it's equal
+                        tmp += a[row, i] * b[i, col];
 
                     result[row, col] = tmp;
                 }
@@ -99,14 +142,68 @@ namespace MatrixMultiplication
             return result;
         }
 
-        public static Matrix StrassenMultiply(Matrix m1, Matrix m2)
+        public static Matrix StrassenMultiply(Matrix a, Matrix b)
         {
-            var sizes = new int[] { m1.Rows, m1.Columns, m2.Rows, m2.Columns };
-            if (sizes.Distinct().Count() != 1 || (m1.Rows & (m1.Rows - 1)) != 0)
+            // TODO If the matrices A, B are not of type 2n x 2n we fill the missing rows and columns with zeros.
+            var sizes = new int[] { a.Rows, a.Columns, b.Rows, b.Columns };
+            if (sizes.Distinct().Count() != 1 || (a.Rows & (a.Rows - 1)) != 0)
                 throw new ArgumentException("Not identical or square matrices.");
 
-            Matrix result = new Matrix(m1.Rows);
+            int N = b.Rows;
+            if (N < 48)
+                return NormalMultiply(a, b);
 
+            int halfN = N / 2;
+
+            var a11 = a.SubMatrix(0, halfN, 0, halfN);
+            var a12 = a.SubMatrix(0, halfN, halfN, N);
+            var a21 = a.SubMatrix(halfN, N, 0, halfN);
+            var a22 = a.SubMatrix(halfN, N, halfN, N);
+
+            var b11 = b.SubMatrix(0, halfN, 0, halfN);
+            var b12 = b.SubMatrix(0, halfN, halfN, N);
+            var b21 = b.SubMatrix(halfN, N, 0, halfN);
+            var b22 = b.SubMatrix(halfN, N, halfN, N);
+
+            Matrix[] m = new Matrix[]{
+                StrassenMultiply(a11 + a22, b11 + b22),     // m1
+                StrassenMultiply(a21 + a22, b11),           // m2
+                StrassenMultiply(a11, b12 - b22),           // m3
+                StrassenMultiply(a22, b21 - b11),           // m4
+                StrassenMultiply(a11 + a12, b22),           // m5
+                StrassenMultiply(a21 - a11, b11 + b12),     // m6
+                StrassenMultiply(a12 - a22, b21 + b22),     // m7
+            };
+
+            var c11 = m[0] + m[3] - m[4] + m[6];
+            var c12 = m[2] + m[4];
+            var c21 = m[1] + m[3];
+            var c22 = m[0] - m[1] + m[2] + m[5];
+
+            return CombineSubMatrices(c11, c12, c21, c22);
+        }
+
+        private Matrix SubMatrix(int rowFrom, int rowTo, int colFrom, int colTo)
+        {
+            Matrix result = new Matrix(rowTo - rowFrom, colTo - colFrom);
+            for (int row = rowFrom, i = 0; row < rowTo; row++, i++)
+                for (int col = colFrom, j = 0; col < colTo; col++, j++)
+                    result[i, j] = values[row, col];
+            return result;
+        }
+
+        private static Matrix CombineSubMatrices(Matrix a11, Matrix a12, Matrix a21, Matrix a22)
+        {
+            Matrix result = new Matrix(a11.Rows * 2);
+            int shift = a11.Rows;
+            for (int row = 0; row < a11.Rows; row++)
+                for (int col = 0; col < a11.Columns; col++)
+                {
+                    result[row, col] = a11[row, col];
+                    result[row, col + shift] = a12[row, col];
+                    result[row + shift, col] = a21[row, col];
+                    result[row + shift, col + shift] = a22[row, col];
+                }
             return result;
         }
     }
