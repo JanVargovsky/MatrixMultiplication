@@ -36,6 +36,7 @@ namespace MatrixMultiplication.Example
             int N = int.Parse(Console.ReadLine());
             Console.WriteLine("Enter count of reiteration");
             int numberOfTests = int.Parse(Console.ReadLine());
+
             var results = new List<Result>();
 
             for (int i = 1; i <= N; i *= 2)
@@ -45,6 +46,7 @@ namespace MatrixMultiplication.Example
                 {
                     Console.Clear();
                     Console.WriteLine("Testing {0} for {1}/{2} times.", i, n, numberOfTests);
+
                     var a = MatrixGenerator.Generate(i);
                     var b = MatrixGenerator.Generate(i);
 
@@ -63,11 +65,11 @@ namespace MatrixMultiplication.Example
             }
             Console.Clear();
 
-            string consoleFormat = "{0} \t {1:N4}ms \t {2:N4}ms";
+            string consoleFormat = "{0} \t {1:N3}ms \t {2:N3}ms";
             WriteResults(Console.Out, results, consoleFormat, "Size \t Normal \t Straussen");
 
             string fileFormat = "{0};{1};{2}";
-            SaveResultsToCSV(results, fileFormat, "Size of matrix;Normal multiply;Straussen multiply", "results.txt");
+            SaveResultsToCSV(results, fileFormat, "Size of matrix;Normal multiply;Straussen multiply", "results.csv");
             Console.ReadKey();
         }
 
@@ -78,9 +80,7 @@ namespace MatrixMultiplication.Example
 
             foreach (var r in results)
             {
-                var avg1 = r.Times1.Average();
-                var avg2 = r.Times2.Average();
-                output.WriteLine(format, r.TestName, avg1, avg2);
+                output.WriteLine(format, r.TestName, r.Times1.Average(), r.Times2.Average());
             }
         }
 

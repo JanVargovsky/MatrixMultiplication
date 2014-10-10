@@ -150,7 +150,7 @@ namespace MatrixMultiplication
                 throw new ArgumentException("Not identical or square matrices.");
 
             int N = b.Rows;
-            if (N < 48)
+            if (N <= 24)
                 return NormalMultiply(a, b);
 
             int halfN = N / 2;

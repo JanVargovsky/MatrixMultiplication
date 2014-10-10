@@ -14,7 +14,6 @@ namespace MatrixMultiplication
                 }
                 output.WriteLine();
             }
-            output.WriteLine();
         }
     }
 }

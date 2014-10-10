@@ -30,8 +30,10 @@ namespace MatrixMultiplication
         public static Matrix IdentityMatrix(int m)
         {
             Matrix matrix = new Matrix(m);
+
             for (int i = 0; i < m; i++)
                 matrix[i, i] = 1;
+
             return matrix;
         }
     }
