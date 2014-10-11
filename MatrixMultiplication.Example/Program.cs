@@ -21,15 +21,6 @@ namespace MatrixMultiplication.Example
 
     class Program
     {
-        static Matrix CreateMatrix(double[,] v)
-        {
-            Matrix m = new Matrix(v.GetLength(0), v.GetLength(1));
-            for (int row = 0; row < m.Rows; row++)
-                for (int col = 0; col < m.Columns; col++)
-                    m[row, col] = v[row, col];
-            return m;
-        }
-
         static void Main(string[] args)
         {
             Console.WriteLine("Enter maximum size of matrix to multiply");
@@ -42,9 +33,8 @@ namespace MatrixMultiplication.Example
             for (int i = 1; i <= N; i *= 2)
             {
                 Result r = new Result(i.ToString());
-                for (int n = 0; n < numberOfTests; n++)
+                for (int n = 1; n <= numberOfTests; n++)
                 {
-                    Console.Clear();
                     Console.WriteLine("Testing {0} for {1}/{2} times.", i, n, numberOfTests);
 
                     var a = MatrixGenerator.Generate(i);
@@ -58,18 +48,18 @@ namespace MatrixMultiplication.Example
                     var strassen = Matrix.StrassenMultiply(a, b);
                     t2.Stop();
 
-                    r.Times1.Add(t1.Elapsed.TotalMilliseconds);
-                    r.Times2.Add(t2.Elapsed.TotalMilliseconds);
+                    r.Times1.Add(t1.Elapsed.TotalSeconds);
+                    r.Times2.Add(t2.Elapsed.TotalSeconds);
                 }
                 results.Add(r);
             }
-            Console.Clear();
 
-            string consoleFormat = "{0} \t {1:N3}ms \t {2:N3}ms";
+            string consoleFormat = "{0}\t{1:N6}s\t{2:N6}s";
             WriteResults(Console.Out, results, consoleFormat, "Size \t Normal \t Straussen");
 
-            string fileFormat = "{0};{1};{2}";
-            SaveResultsToCSV(results, fileFormat, "Size of matrix;Normal multiply;Straussen multiply", "results.csv");
+            string fileFormat = "{0};{1:N6};{2:N6}";
+            string fileName = "results_" + DateTime.Now.ToFileTime() + ".csv";
+            SaveResultsToCSV(results, fileFormat, "Size of matrix;Normal multiply;Straussen multiply", fileName);
             Console.ReadKey();
         }
 
@@ -80,7 +70,9 @@ namespace MatrixMultiplication.Example
 
             foreach (var r in results)
             {
-                output.WriteLine(format, r.TestName, r.Times1.Average(), r.Times2.Average());
+                double avg1 = r.Times1.Average();
+                double avg2 = r.Times2.Average();
+                output.WriteLine(format, r.TestName, avg1, avg2);
             }
         }
 
