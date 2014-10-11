@@ -29,6 +29,7 @@ namespace MatrixMultiplication.Example
             int numberOfTests = int.Parse(Console.ReadLine());
 
             var results = new List<Result>();
+            var start = DateTime.Now;
 
             for (int i = 1; i <= N; i *= 2)
             {
@@ -56,9 +57,9 @@ namespace MatrixMultiplication.Example
 
             string consoleFormat = "{0}\t{1:N6}s\t{2:N6}s";
             WriteResults(Console.Out, results, consoleFormat, "Size \t Normal \t Straussen");
-
+            Console.WriteLine(Environment.NewLine + "Total time " + (DateTime.Now - start).ToString());
             string fileFormat = "{0};{1:N6};{2:N6}";
-            string fileName = "results_" + DateTime.Now.ToFileTime() + ".csv";
+            string fileName = string.Format("results_{0}_{1}_{2}.csv", N, numberOfTests, DateTime.Now.ToFileTime());
             SaveResultsToCSV(results, fileFormat, "Size of matrix;Normal multiply;Straussen multiply", fileName);
             Console.ReadKey();
         }

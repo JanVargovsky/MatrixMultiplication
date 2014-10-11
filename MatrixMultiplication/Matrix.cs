@@ -57,7 +57,7 @@ namespace MatrixMultiplication
         }
         #endregion
 
-        #region Overrided methods
+        #region Overriden methods
         public override bool Equals(object obj)
         {
             Matrix a = this, b = (Matrix)obj;
@@ -150,7 +150,7 @@ namespace MatrixMultiplication
                 throw new ArgumentException("Not identical or square matrices.");
 
             int N = b.Rows;
-            if (N <= 24)
+            if (N <= 48)
                 return NormalMultiply(a, b);
 
             int halfN = N / 2;
